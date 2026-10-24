@@ -28,15 +28,13 @@ OctoFit Tracker is a three-tier application for a school fitness program. The st
 
 ## Implementation decisions
 
-Record your plan here before editing code.
-
-- Presentation tier decision:
-- Logic tier decision:
-- Data tier decision:
-- Activity tracking approach:
-- Team management approach:
-- Leaderboard approach:
-- Workout suggestions approach:
+- Presentation tier decision: Keep the React app thin and declarative. Reuse a small shared API client, render route-specific cards for activities, teams, leaderboard, and workouts, and surface loading, empty, and error states with accessible roles and messages.
+- Logic tier decision: Implement the route behavior in the Express service layer so the routes stay minimal and each capability is validated once before reaching Mongo. Business logic should normalize request data, reject invalid IDs and missing records with deliberate 4xx errors, and avoid leaking Mongo cast errors as 500s.
+- Data tier decision: Use Mongoose schemas with required fields and refs for users, teams, activities, and workouts. Seed data must be idempotent and preserve any unrelated records already in the database while ensuring the expected OctoFit fixtures exist for the test contract.
+- Activity tracking approach: Accept `userId`, `teamId`, `type`, and `minutes`; verify both references exist; compute `points` from the submitted duration; persist `user`, `team`, `type`, `minutes`, `points`, and `occurredAt`; and return a 201 activity payload that matches the API contract.
+- Team management approach: Require a non-empty team name and store a mascot plus an array of member IDs. Team creation should accept members as IDs, validate the shape, and list teams with their member references intact.
+- Leaderboard approach: Aggregate each team’s total points from stored activities, sort descending by total, and assign a 1-based rank while returning `teamName`, `totalPoints`, and `rank` in the payload.
+- Workout suggestions approach: Match the requested user email to a seeded user, inspect recent activity patterns and goals, and return the most relevant workout suggestions with `focus` and a descriptive `reason` explaining the match. Unknown users should return a deliberate 4xx response, not a generic 500.
 
 ## Test plan
 
